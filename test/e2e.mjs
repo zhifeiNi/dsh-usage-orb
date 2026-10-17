@@ -8,21 +8,39 @@
  *   · 截图存证
  */
 import { spawn, execFileSync } from 'node:child_process'
-import { existsSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /* 桌面端可执行文件：默认按平台推导，可用 DSH_EXE 覆盖 */
-const EXE = process.env.DSH_EXE || (process.platform === 'win32'
-  ? join(process.env.LOCALAPPDATA || '', 'Programs', 'DeepSeek Harness', 'DeepSeek Harness.exe')
-  : '/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness')
+/* 桌面端可执行文件：按优先级探测；都不在就明确报错，而不是给出一个猜错的路径。
+   用自己的安装位置：DSH_EXE=/path/to/DeepSeek Harness（macOS 指向 .app 内的可执行文件） */
+const EXE_CANDIDATES = [
+  process.env.DSH_EXE,
+  process.platform === 'win32'
+    ? join(process.env.LOCALAPPDATA || '', 'Programs', 'DeepSeek Harness', 'DeepSeek Harness.exe')
+    : null,
+  process.platform === 'win32'
+    ? join(process.env.PROGRAMFILES || '', 'DeepSeek Harness', 'DeepSeek Harness.exe')
+    : null,
+  'D:\\localApp\\DeepSeek Harness\\DeepSeek Harness.exe',
+  '/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness'
+].filter(Boolean)
+const EXE = EXE_CANDIDATES.find((x) => { try { return existsSync(x) } catch { return false } })
+if (!EXE) {
+  console.error('找不到 DeepSeek Harness 可执行文件。请用环境变量指定，例如：\n  DSH_EXE="D:\\localApp\\DeepSeek Harness\\DeepSeek Harness.exe" npm run test:e2e')
+  process.exit(2)
+}
+
 const APP_ROOT = process.env.DSH_APP_ROOT || join(dirname(EXE), 'resources', 'app.asar', 'dsh')
 const CLIJS = join(APP_ROOT, 'node_modules', '@deepseek-ai', 'dsh-desktop-host', 'lib', 'cli.js')
 const CHROME = join(process.env.LOCALAPPDATA, 'Google', 'Chrome', 'Application', 'chrome.exe')
 const PROFILE = 'usage-verify'
 const OUT_DIR = process.env.DSH_E2E_OUT || join(tmpdir(), 'dsh-usage-panel-e2e')
 const SHOT = join(OUT_DIR, 'verify-usage-panel-v0.2.0.png')
+/* 输出目录可能不存在（默认在临时目录下）：先建好再写截图 */
+mkdirSync(OUT_DIR, { recursive: true })
 const CHROME_DATA = join(tmpdir(), 'dsh-verify-chrome')
 const CDP_PORT = 9788
 
@@ -1055,6 +1073,49 @@ try {
       moves: document.querySelectorAll('[data-card-move]').length
     }))()`)
     expect('退出后编辑把手消失', ex.resizers === 0 && ex.moves === 0, JSON.stringify(ex))
+  }
+
+  log('\n=== 5f. 按钮被拖到角落时，面板必须完整可见 ===')
+  {
+    await evalIn(`(() => { try { localStorage.setItem('dsh-usage-panel:fabpos', JSON.stringify({ x: -900, y: -700 })); return true } catch { return false } })()`)
+    await cdp.send('Page.reload')
+    await sleep(7000)
+    const fab = await evalIn(`(() => {
+      const f = document.querySelector('.dsh-fab')
+      if (!f) return null
+      const r = f.getBoundingClientRect()
+      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), l: Math.round(r.left), t: Math.round(r.top) }
+    })()`)
+    log('  按钮已被移到: ' + JSON.stringify(fab))
+    await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); if (f) f.click(); return !!f })()`)
+    await sleep(2400)
+    const box = await evalIn(`(() => {
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      if (!p) return null
+      const r = p.getBoundingClientRect()
+      const f = document.querySelector('.dsh-fab')
+      const fr = f ? f.getBoundingClientRect() : null
+      return {
+        l: Math.round(r.left), t: Math.round(r.top), r: Math.round(r.right), b: Math.round(r.bottom),
+        w: Math.round(r.width), h: Math.round(r.height),
+        vw: window.innerWidth, vh: window.innerHeight,
+        fl: fr ? Math.round(fr.left) : null, ft: fr ? Math.round(fr.top) : null
+      }
+    })()`)
+    log('  面板: ' + JSON.stringify(box))
+    expect('面板已出现', !!(box && box.w > 100), JSON.stringify(box))
+    expect('面板左边不越界', !!(box && box.l >= 0), box && String(box.l))
+    expect('面板顶边不越界', !!(box && box.t >= 0), box && String(box.t))
+    expect('面板右边不越界', !!(box && box.r <= box.vw), box && (box.r + ' <= ' + box.vw))
+    expect('面板底边不越界', !!(box && box.b <= box.vh), box && (box.b + ' <= ' + box.vh))
+    expect('面板没被按钮或屏幕边缘裁切（四边都在视口内）',
+      !!(box && box.l >= 0 && box.t >= 0 && box.r <= box.vw && box.b <= box.vh), JSON.stringify(box))
+    /* 复位，避免影响后面的步骤 */
+    await evalIn(`(() => { try { localStorage.removeItem('dsh-usage-panel:fabpos') } catch { /* ignore */ } return true })()`)
+    await cdp.send('Page.reload')
+    await sleep(7000)
+    await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); if (f && !document.querySelector('[data-dsh-usage-panel]')) f.click(); return true })()`)
+    await sleep(1500)
   }
 
   log('\n=== 清理 ===')
