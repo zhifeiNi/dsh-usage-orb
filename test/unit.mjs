@@ -105,9 +105,9 @@ await writeFile(join(P, 'fixture-proj.json'), JSON.stringify({
 
 /* ------------------------------------------------------------------ */
 const prices = await import(new URL('../lib/prices.js', import.meta.url).href)
-const framesMod = await import('file:///D:/Agent/dsh-usage-panel/lib/frames.js')
-const parseMod = await import('file:///D:/Agent/dsh-usage-panel/lib/parse.js')
-const aggMod = await import('file:///D:/Agent/dsh-usage-panel/lib/aggregate.js')
+const framesMod = await import(new URL('../lib/frames.js', import.meta.url).href)
+const parseMod = await import(new URL('../lib/parse.js', import.meta.url).href)
+const aggMod = await import(new URL('../lib/aggregate.js', import.meta.url).href)
 
 section('价格表（人民币为主口径）')
 {

@@ -1,12 +1,15 @@
-# dsh-usage-panel bundle patch
+# dsh-usage-orb bundle patch
 #
 # 这是一个「组合包（bundle）」的配置层。当它被 profile 的 bundles 列表引用，
 # 或以 --patch overlay 的方式叠加时，下面这条 insert 会把插件挂载进 Loader。
 #
 # 本地试用（不修改任何现有 profile）：
-#   dsh --profile desktop --patch "D:\Agent\dsh-usage-panel\cordis.patch.yml"
+#   dsh --profile desktop --patch "<本仓库路径>/cordis.patch.yml"
 #
-# 说明：插件模块路径使用绝对路径，因此不依赖 profile 的 node_modules 解析。
+# 说明：本地 link 安装时 name 必须是可解析的绝对路径；
+#       用 `dsh plugin add` 从 npm/GitHub 安装时，把它改成包名 'dsh-usage-orb'。
+#       注意：
+#      这样任何人 clone 到任意目录都能用（早期版本写死了开发机的绝对路径）。
 - insert:
     - id: usage-panel
       name: 'D:/Agent/dsh-usage-panel/lib/index.js'

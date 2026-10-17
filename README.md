@@ -1,6 +1,6 @@
-# dsh-usage-panel
+# dsh-usage-orb
 
-[![ci](https://github.com/zhifeiNi/dsh-usage-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/zhifeiNi/dsh-usage-panel/actions/workflows/ci.yml)
+[![ci](https://github.com/zhifeiNi/dsh-usage-orb/actions/workflows/ci.yml/badge.svg)](https://github.com/zhifeiNi/dsh-usage-orb/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 > 截图将在发布时用脱敏数据补充（现仓库不含含个人数据的截图）。
@@ -18,9 +18,9 @@ DSH 自带的用量胶囊只显示**当前会话**的账；本插件读取全部
 |---|---|---|
 | 数据源解析 | ✅ 真实数据 | 13 个文件扫描、采用 9 个；四类 token 完整；按模型之和 = 总量 |
 | 指标口径 | ✅ 与 DSH 同源 | 解码速度 228.6 tok/s（`decodeTokens/decodeMs`，与官方 `StatsPills` 同算法）、缓存命中率 99.62% |
-| host 侧加载 | ✅ 真实 DSH 日志 | `[dsh-usage-panel] host 侧已加载` + 自检行 |
+| host 侧加载 | ✅ 真实 DSH 日志 | `[dsh-usage-orb] host 侧已加载` + 自检行 |
 | host 路由 | ✅ 真实 HTTP 200 | `GET /usage-panel/api/usage` 返回合法 JSON；`POST {"days":2}` 正确裁剪 |
-| **client 激活** | ✅ 真实控制台 | `[dsh-usage-panel] client 侧已加载` / `已挂载浮动入口`，无异常 |
+| **client 激活** | ✅ 真实控制台 | `[dsh-usage-orb] client 侧已加载` / `已挂载浮动入口`，无异常 |
 | **界面渲染** | ✅ **真实浏览器截图** | headless Chrome 打开真实 DSH，点击后 656 字符面板文本 + `rects=9, polylines=1, circles=3, texts=6`； |
 | 卸载路径 | ✅ | `ctx.effect` cleanup 干净撤回 |
 | 本地 desktop profile | ✅ **零改动** | 全程未写入 |
@@ -95,7 +95,7 @@ DSH 自带的用量胶囊只显示**当前会话**的账；本插件读取全部
 ## 目录结构
 
 ```
-D:\Agent\dsh-usage-panel\
+D:\path\to\dsh-usage-orb\
 ├── package.json         插件元数据（dsh.bundle / dsh.client / peerDependencies）
 ├── cordis.patch.yml     叠加层：把插件插入 Loader
 ├── lib\
@@ -116,16 +116,16 @@ D:\Agent\dsh-usage-panel\
 ```powershell
 $profile = "$env:USERPROFILE\.dsh\profiles\desktop"   # 换成你要用的 profile
 New-Item -ItemType Directory -Path "$profile\node_modules" -Force | Out-Null
-cmd /c mklink /J "$profile\node_modules\dsh-usage-panel" "D:\Agent\dsh-usage-panel"
+cmd /c mklink /J "$profile\node_modules\dsh-usage-orb" "D:\path\to\dsh-usage-orb"
 ```
 
 **然后按约束 (2) 的方式启动——不改 `package.json`、不动 profile 配置：**
 
 ```powershell
-& "D:\localApp\DeepSeek Harness\DeepSeek Harness.exe" --patch "D:\Agent\dsh-usage-panel\cordis.patch.yml"
+& "<DSH 安装目录>\DeepSeek Harness.exe" --patch "D:\path\to\dsh-usage-orb\cordis.patch.yml"
 ```
 
-- 插件实体仍在 `D:\Agent\dsh-usage-panel`，**没有进入 profile**
+- 插件实体仍在 `D:\path\to\dsh-usage-orb`，**没有进入 profile**
 - 那个 junction 是**纯链接、0 字节**，删掉即彻底还原
 - 若想改用 `dsh.profile.bundles` 安装（需改 `package.json`），见下方方式二
 
@@ -135,10 +135,10 @@ cmd /c mklink /J "$profile\node_modules\dsh-usage-panel" "D:\Agent\dsh-usage-pan
 
 ```json
 {
-  "dependencies": { "dsh-usage-panel": "link:D:/Agent/dsh-usage-panel" },
+  "dependencies": { "dsh-usage-orb": "link:/path/to/dsh-usage-orb" },
   "dsh": {
     "profile": {
-      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-usage-panel"]
+      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-usage-orb"]
     }
   }
 }
@@ -151,7 +151,7 @@ cmd /c mklink /J "$profile\node_modules\dsh-usage-panel" "D:\Agent\dsh-usage-pan
 ### 方式三：pnpm 修好后用官方命令
 
 ```powershell
-dsh plugin --profile <name> add D:\Agent\dsh-usage-panel
+dsh plugin --profile <name> add <本仓库路径>
 ```
 
 但目前**本机 pnpm 不可用**（见下方"环境问题"），这条命令会失败。
@@ -159,7 +159,7 @@ dsh plugin --profile <name> add D:\Agent\dsh-usage-panel
 ### 卸载
 
 ```powershell
-cmd /c rmdir "$profile\node_modules\dsh-usage-panel"   # 先断链接，避免误删插件源码
+cmd /c rmdir "$profile\node_modules\dsh-usage-orb"   # 先断链接，避免误删插件源码
 # 若用过方式二，再从 package.json 里移除那两项声明
 ```
 
@@ -173,8 +173,8 @@ cmd /c rmdir "$profile\node_modules\dsh-usage-panel"   # 先断链接，避免�
 
 1. **宿主日志**里出现两行：
    ```
-   [dsh-usage-panel] host 侧已加载
-   [dsh-usage-panel] 自检：扫描 12 个会话文件，采用 9 个，跳过 3 个；合计 857218617 tokens，缓存命中率 99.63%，模型 1 个，有日期的 2 天
+   [dsh-usage-orb] host 侧已加载
+   [dsh-usage-orb] 自检：扫描 12 个会话文件，采用 9 个，跳过 3 个；合计 857218617 tokens，缓存命中率 99.63%，模型 1 个，有日期的 2 天
    ```
    看到这两行 = host 侧活着、数据读取正确。
 
@@ -189,7 +189,7 @@ cmd /c rmdir "$profile\node_modules\dsh-usage-panel"   # 先断链接，避免�
 
 | 现象 | 说明 |
 |---|---|
-| 日志里没有 `[dsh-usage-panel]` | 插件没被加载。检查 patch 路径是否正确、文件是否存在 |
+| 日志里没有 `[dsh-usage-orb]` | 插件没被加载。检查 patch 路径是否正确、文件是否存在 |
 | 有 host 日志但界面没有「用量」按钮 | host 活了但 client bundle 没被物化。最可能是 client 模块发现失败（见下方"已知风险"） |
 | 按钮在但点击没反应 | panel host 挂载失败；看浏览器控制台（Ctrl+Shift+I）的报错 |
 
@@ -251,14 +251,18 @@ cmd /c rmdir "$profile\node_modules\dsh-usage-panel"   # 先断链接，避免�
 ```bash
 # ① 在 DSH 的 profile 里登记为本地依赖（以 desktop profile 为例）
 #    ~/.dsh/profiles/desktop/package.json
-#    "dependencies": { "dsh-usage-panel": "link:D:/path/to/dsh-usage-panel" }
+#    "dependencies": { "dsh-usage-orb": "link:D:/path/to/dsh-usage-orb" }
 
 # ② 同一文件里把它加入 bundles，DSH 才会加载它
-#    "dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-usage-panel"] } }
+#    "dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-usage-orb"] } }
 
 # ③ 建软链接（Windows 用 mklink /J，类 Unix 用 ln -s）
-#    ~/.dsh/profiles/desktop/node_modules/dsh-usage-panel  ->  你的仓库目录
+#    ~/.dsh/profiles/desktop/node_modules/dsh-usage-orb  ->  你的仓库目录
 ```
+
+> **两种装法的差异**：本地 link 安装时，`cordis.patch.yml` 里的 `name` 必须是可解析的
+> 绝对路径（仓库里保留的是开发者本机路径，请改成你自己的仓库路径）；用
+> `dsh plugin add` 从 npm/GitHub 安装时，把那一行改成包名 `dsh-usage-orb`。
 
 然后**完全退出并重启 DSH**。右下角出现浮动按钮即安装成功。
 

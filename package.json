@@ -1,5 +1,5 @@
 {
-    "name": "dsh-usage-panel",
+    "name": "dsh-usage-orb",
     "version": "0.2.0",
     "private": true,
     "description": "DSH 浮动面板：跨会话用量统计（事件流逐请求口径、缓存经济性、峰谷成本、工具与压缩诊断）",
@@ -58,10 +58,10 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/zhifeiNi/dsh-usage-panel.git"
+        "url": "git+https://github.com/zhifeiNi/dsh-usage-orb.git"
     },
-    "homepage": "https://github.com/zhifeiNi/dsh-usage-panel#readme",
+    "homepage": "https://github.com/zhifeiNi/dsh-usage-orb#readme",
     "bugs": {
-        "url": "https://github.com/zhifeiNi/dsh-usage-panel/issues"
+        "url": "https://github.com/zhifeiNi/dsh-usage-orb/issues"
     }
 }
