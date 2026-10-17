@@ -368,7 +368,7 @@ try {
   // （"每日 Token 用量" → "每日 TOKEN 用量"），所以比较必须忽略大小写。
   const hay = text.toLowerCase()
   const markers = [
-    '消耗统计', 'dsh-usage-orb v0.2.0', '数据更新于',
+    '消耗统计', 'dsh-usage-orb v0.2.1', '数据更新于',
     'Token 总用量', '会话 / 请求', '最常用模型',
     '估算成本', '缓存省下的钱', '高峰时段占比',
     '活跃热力图', '每日 Token 用量', '每日成本',
@@ -1018,6 +1018,20 @@ try {
   log('\n=== 10. 截图 ===')
   /* 发布用截图：只裁面板上半部（表头 + 指标卡 + 余额），不含实时动态/会话标题等个人信息 */
   try {
+    /* 截图前隐藏「实时动态」：那一行会带出会话标题（个人信息），发布截图不能有 */
+    await evalIn(`(() => {
+      try {
+        const raw = JSON.parse(localStorage.getItem('dsh-usage-panel:prefs') || '{}')
+        window.__shotHideTicker = !raw.fTicker
+        raw.fTicker = false
+        localStorage.setItem('dsh-usage-panel:prefs', JSON.stringify(raw))
+        return true
+      } catch { return false }
+    })()`)
+    await cdp.send('Page.reload')
+    await sleep(6500)
+    await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); const o = !!document.querySelector('[data-dsh-usage-panel]'); if (f && !o) f.click(); return o })()`)
+    await sleep(1800)
     const pbox = await evalIn(`(() => {
       const p = document.querySelector('[data-dsh-usage-panel]')
       if (!p) return null
