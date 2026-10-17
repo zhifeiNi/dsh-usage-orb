@@ -486,6 +486,40 @@ try {
     await sleep(600)
   }
 
+  log('\n=== 5l. 窗口尺寸变化时按钮按比例保持位置 ===')
+  {
+    /* 先缩到小窗口，把按钮放在「中间偏左」，然后放大，位置应保持同样的相对比例 */
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 700, height: 520, deviceScaleFactor: 1, mobile: false })
+    await sleep(900)
+    const small = await evalIn(`(() => {
+      const size = 46
+      const maxL = innerWidth - size - 28, maxU = innerHeight - size - 40
+      const x = -Math.round(maxL * 0.5), y = -Math.round(maxU * 0.5)
+      try { localStorage.setItem('dsh-usage-panel:fabpos', JSON.stringify({ x, y, vw: innerWidth, vh: innerHeight })) } catch {}
+      return { x, y, maxL, maxU, fx: 0.5 }
+    })()`)
+    await cdp.send('Page.reload')
+    await sleep(6000)
+    const inSmall = await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); const r = f.getBoundingClientRect(); return { l: Math.round(r.left), t: Math.round(r.top), vw: innerWidth, vh: innerHeight } })()`)
+    log('  小窗口: ' + JSON.stringify(small) + ' → ' + JSON.stringify(inSmall))
+    await cdp.send('Emulation.clearDeviceMetricsOverride')
+    await sleep(1500)
+    const inBig = await evalIn(`(() => {
+      let saved = null
+      try { saved = JSON.parse(localStorage.getItem('dsh-usage-panel:fabpos') || 'null') } catch { /* ignore */ }
+      const f = document.querySelector('.dsh-fab')
+      const r = f.getBoundingClientRect()
+      const size = 46
+      const maxL = innerWidth - size - 28
+      const fx = saved ? Math.min(1, Math.max(0, -saved.x / Math.max(1, maxL))) : null
+      return { l: Math.round(r.left), t: Math.round(r.top), vw: innerWidth, vh: innerHeight, saved, fx: fx === null ? null : Math.round(fx * 100) / 100 }
+    })()`)
+    log('  放大后: ' + JSON.stringify(inBig))
+    expect('放大后按钮仍按比例在中间（0.5 ± 0.12）', !!(inBig && typeof inBig.fx === 'number' && Math.abs(inBig.fx - 0.5) <= 0.12), JSON.stringify({ fx: inBig && inBig.fx }))
+    await evalIn(`(() => { try { localStorage.removeItem('dsh-usage-panel:fabpos') } catch { /* ignore */ } const f = document.querySelector('.dsh-fab'); if (f) f.style.transform = ''; return true })()`)
+    await sleep(600)
+  }
+
   log('\n=== 5j. 气泡跟随按钮 / 面板不再先闪到右边 ===')
   {
     /* 把按钮挪到左侧，再看气泡是否跟着 */
