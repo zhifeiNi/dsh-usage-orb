@@ -112,60 +112,44 @@ D:\path\to\dsh-usage-orb\
 
 ---
 
-## 如何安装（只需一个链接，不改任何配置文件）
+## 安装
 
-因为上面那条前提，唯一需要的一步是：**把本目录链接进目标 profile 的 `node_modules`**。
+需要 DSH 桌面端（自带 `dsh plugin` 命令）。
 
-```powershell
-$profile = "$env:USERPROFILE\.dsh\profiles\desktop"   # 换成你要用的 profile
-New-Item -ItemType Directory -Path "$profile\node_modules" -Force | Out-Null
-cmd /c mklink /J "$profile\node_modules\dsh-usage-orb" "D:\path\to\dsh-usage-orb"
+```bash
+# 从 GitHub 安装（推荐，无需发布到 npm）
+dsh plugin --profile desktop add github:zhifeiNi/dsh-usage-orb
+
+# 或从本地目录安装（改源码即生效，适合开发）
+dsh plugin --profile desktop add D:\path\to\dsh-usage-orb
 ```
 
-**然后按约束 (2) 的方式启动——不改 `package.json`、不动 profile 配置：**
+装完**重启 DSH**，右下角出现圆形进度环即成功。卸载 / 升级：
 
-```powershell
-& "<DSH 安装目录>\DeepSeek Harness.exe" --patch "D:\path\to\dsh-usage-orb\cordis.patch.yml"
+```bash
+dsh plugin --profile desktop remove dsh-usage-orb
+dsh plugin --profile desktop update dsh-usage-orb
 ```
 
-- 插件实体仍在 `D:\path\to\dsh-usage-orb`，**没有进入 profile**
-- 那个 junction 是**纯链接、0 字节**，删掉即彻底还原
-- 若想改用 `dsh.profile.bundles` 安装（需改 `package.json`），见下方方式二
+> `--profile` 填你实际在用的 profile（桌面端一般是 `desktop`，Web 端常见 `web`）。
+> `dsh plugin add` 会自动把它写进 profile 的 `dependencies` 与 `dsh.profile.bundles`，**不需要手工建软链接**。
 
-### 方式二：正式安装（需改 profile 的 package.json）
+<details>
+<summary>手工安装（旧版 DSH 没有 <code>dsh plugin</code> 命令时）</summary>
 
-在 `dependencies` 与 `dsh.profile.bundles` 里各加一项：
-
-```json
-{
-  "dependencies": { "dsh-usage-orb": "link:/path/to/dsh-usage-orb" },
-  "dsh": {
-    "profile": {
-      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-usage-orb"]
-    }
-  }
-}
+```bash
+# ① profile 的 package.json 里加依赖（以 desktop 为例）
+#    "dependencies": { "dsh-usage-orb": "link:D:/path/to/dsh-usage-orb" }
+# ② 同一文件把它加入 bundles
+#    "dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-usage-orb"] } }
+# ③ 建软链接（Windows: mklink /J；类 Unix: ln -s）
+#    ~/.dsh/profiles/desktop/node_modules/dsh-usage-orb  ->  你的仓库目录
 ```
 
-> ⚠️ **必须写成无 BOM 的 UTF-8**。PowerShell 5.1 的 `Set-Content -Encoding UTF8`
-> 会写入 BOM，DSH 的 JSON 解析器会直接报 `Unexpected token '﻿'` 并拒绝启动。
-> 用 Node 写，或用能保证无 BOM 的编辑器。
+手工安装时，`cordis.patch.yml` 里的 `name` 需要改成你的**绝对路径**
+（仓库里保留的是包名 `dsh-usage-orb`，只有经 `dsh plugin add` 安装时才能被解析）。
 
-### 方式三：pnpm 修好后用官方命令
-
-```powershell
-dsh plugin --profile <name> add <本仓库路径>
-```
-
-但目前**本机 pnpm 不可用**（见下方"环境问题"），这条命令会失败。
-
-### 卸载
-
-```powershell
-cmd /c rmdir "$profile\node_modules\dsh-usage-orb"   # 先断链接，避免误删插件源码
-# 若用过方式二，再从 package.json 里移除那两项声明
-```
-
+</details>
 
 
 ---
@@ -246,45 +230,6 @@ cmd /c rmdir "$profile\node_modules\dsh-usage-orb"   # 先断链接，避免误�
 真正的全价输入只有约 320 万 token。用量成本几乎完全由缓存命中率决定。
 
 ---
-
-## 安装
-
-需要 DSH 桌面端（自带 `dsh plugin` 命令）。
-
-```bash
-# 从 GitHub 安装（推荐，无需发布到 npm）
-dsh plugin --profile desktop add github:zhifeiNi/dsh-usage-orb
-
-# 或从本地目录安装（改源码即生效，适合开发）
-dsh plugin --profile desktop add D:\path\to\dsh-usage-orb
-```
-
-装完**重启 DSH**，右下角出现圆形进度环即成功。卸载 / 升级：
-
-```bash
-dsh plugin --profile desktop remove dsh-usage-orb
-dsh plugin --profile desktop update dsh-usage-orb
-```
-
-> `--profile` 填你实际在用的 profile（桌面端一般是 `desktop`，Web 端常见 `web`）。
-> `dsh plugin add` 会自动把它写进 profile 的 `dependencies` 与 `dsh.profile.bundles`，**不需要手工建软链接**。
-
-<details>
-<summary>手工安装（旧版 DSH 没有 <code>dsh plugin</code> 命令时）</summary>
-
-```bash
-# ① profile 的 package.json 里加依赖（以 desktop 为例）
-#    "dependencies": { "dsh-usage-orb": "link:D:/path/to/dsh-usage-orb" }
-# ② 同一文件把它加入 bundles
-#    "dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-usage-orb"] } }
-# ③ 建软链接（Windows: mklink /J；类 Unix: ln -s）
-#    ~/.dsh/profiles/desktop/node_modules/dsh-usage-orb  ->  你的仓库目录
-```
-
-手工安装时，`cordis.patch.yml` 里的 `name` 需要改成你的**绝对路径**
-（仓库里保留的是包名 `dsh-usage-orb`，只有经 `dsh plugin add` 安装时才能被解析）。
-
-</details>
 
 ## 隐私
 
