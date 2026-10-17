@@ -1,0 +1,15 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # 无需安装依赖：插件零运行时依赖，测试只用 node 内置模块
+      - run: npm test
+        # e2e 有意不在 CI 跑：它会启动真实 DSH、克隆 profile、结束进程

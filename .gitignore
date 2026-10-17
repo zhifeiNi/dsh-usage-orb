@@ -1,0 +1,8 @@
+node_modules/
+*.bak
+*.corrupt.bak
+*.log
+*.errbak
+verify-*.png
+e2e-*.png
+.DS_Store
