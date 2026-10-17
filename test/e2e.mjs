@@ -511,7 +511,7 @@ try {
       const r = f.getBoundingClientRect()
       const size = 46
       const maxL = innerWidth - size - 28
-      const fx = saved ? Math.min(1, Math.max(0, -saved.x / Math.max(1, maxL))) : null
+      const fx = Math.round((innerWidth - 14 - r.right) / Math.max(1, maxL) * 100) / 100
       return { l: Math.round(r.left), t: Math.round(r.top), vw: innerWidth, vh: innerHeight, saved, fx: fx === null ? null : Math.round(fx * 100) / 100 }
     })()`)
     log('  放大后: ' + JSON.stringify(inBig))
