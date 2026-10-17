@@ -464,6 +464,48 @@ try {
       grid.tiles.every((t) => t.h <= t.rows * unit + (t.rows - 1) * gap + 1.5 + 0.5))
   }
 
+  log('\n=== 5j. 气泡跟随按钮 / 面板不再先闪到右边 ===')
+  {
+    /* 把按钮挪到左侧，再看气泡是否跟着 */
+    await evalIn(`(() => { try { localStorage.setItem('dsh-usage-panel:fabpos', JSON.stringify({ x: -1000, y: 0 })); return true } catch { return false } })()`)
+    await cdp.send('Page.reload')
+    await sleep(6500)
+    const geo = await evalIn(`(() => {
+      const f = document.querySelector('.dsh-fab')
+      const d = document.querySelector('[data-drop]')
+      const fr = f ? f.getBoundingClientRect() : null
+      const dr = d ? d.getBoundingClientRect() : null
+      return {
+        fab: fr ? { l: Math.round(fr.left), t: Math.round(fr.top) } : null,
+        drop: dr ? { l: Math.round(dr.left), t: Math.round(dr.top) } : null,
+        hasDrop: !!d, tf: f ? f.style.transform : null, td: d ? d.style.transform : null
+      }
+    })()`)
+    log('  几何: ' + JSON.stringify(geo))
+    if (geo.hasDrop && geo.fab && geo.drop) {
+      expect('掉血气泡跟着按钮走（水平距离 < 120px）', Math.abs(geo.drop.l - geo.fab.l) < 120, JSON.stringify(geo))
+    } else log('  · 本次无掉血气泡（瞬时条件），跳过位置断言')
+
+    /* 打开面板：150ms 内就应该已经在正确位置且可见（不再先闪到右边） */
+    await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); const o = !!document.querySelector('[data-dsh-usage-panel]'); if (f && !o) f.click(); return o })()`)
+    await sleep(200)
+    const early = await evalIn(`(() => {
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      const f = document.querySelector('.dsh-fab')
+      if (!p || !f) return null
+      const pr = p.getBoundingClientRect(); const fr = f.getBoundingClientRect()
+      return { vis: getComputedStyle(p).visibility, pl: Math.round(pr.left), pr_: Math.round(pr.right), fl: Math.round(fr.left), fr_: Math.round(fr.right), vw: innerWidth }
+    })()`)
+    log('  打开后 200ms: ' + JSON.stringify(early))
+    expect('面板打开后很快就是可见状态（不靠 450ms 轮询）', !!(early && early.vis === 'visible'), JSON.stringify(early))
+    expect('面板一开始就在按钮那一侧（不会先闪到右边）', !!(early && Math.abs(early.pr_ - early.fr_) < 260), JSON.stringify(early))
+    await evalIn(`(() => { try { localStorage.removeItem('dsh-usage-panel:fabpos') } catch { /* ignore */ } return true })()`)
+    await cdp.send('Page.reload')
+    await sleep(6000)
+    await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); if (f && !document.querySelector('[data-dsh-usage-panel]')) f.click(); return true })()`)
+    await sleep(1500)
+  }
+
   log('\n=== 5i. 拖动中不得频闪、面板不得跳边 ===')
   {
     const fab = await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); const r = f.getBoundingClientRect(); return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) } })()`)
