@@ -1110,6 +1110,8 @@ try {
     expect('面板顶边不越界', !!(box && box.t >= 0), box && String(box.t))
     expect('面板右边不越界', !!(box && box.r <= box.vw), box && (box.r + ' <= ' + box.vw))
     expect('面板底边不越界', !!(box && box.b <= box.vh), box && (box.b + ' <= ' + box.vh))
+    expect('面板不会贴着窗口顶端（选更宽裕的一侧）', !!(box && box.t >= 10), box && String(box.t))
+    expect('面板头部完整可见（高度足够容纳表头）', !!(box && box.h > 200), box && String(box.h))
     expect('面板没被按钮或屏幕边缘裁切（四边都在视口内）',
       !!(box && box.l >= 0 && box.t >= 0 && box.r <= box.vw && box.b <= box.vh), JSON.stringify(box))
     /* 复位，避免影响后面的步骤 */
