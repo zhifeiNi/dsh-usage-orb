@@ -464,6 +464,24 @@ try {
       grid.tiles.every((t) => t.h <= t.rows * unit + (t.rows - 1) * gap + 1.5 + 0.5))
   }
 
+  log('\n=== 5g. 面板滚动不会被自己的重定位打断 ===')
+  {
+    const box = await evalIn(`(() => { const p = document.querySelector('[data-dsh-usage-panel]'); if (!p) return null; p.scrollTop = 0; const r = p.getBoundingClientRect(); return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), canScroll: p.scrollHeight > p.clientHeight + 40 } })()`)
+    log('  面板: ' + JSON.stringify(box))
+    expect('面板可滚动（内容超出可视高度）', !!(box && box.canScroll), JSON.stringify(box))
+    if (box) {
+      for (let i = 0; i < 6; i++) {
+        await cdp.send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: box.x, y: box.y, deltaX: 0, deltaY: 240 })
+        await sleep(120)
+      }
+      await sleep(1600)   /* 跨过 3 个 450ms 重定位周期 */
+      const after = await evalIn(`(() => { const p = document.querySelector('[data-dsh-usage-panel]'); return p ? { top: Math.round(p.scrollTop), h: p.scrollHeight, ch: p.clientHeight } : null })()`)
+      log('  滚动后: ' + JSON.stringify(after))
+      expect('滚动后位置保持（不会弹回顶部）', !!(after && after.top > 100), JSON.stringify(after))
+      await evalIn(`(() => { const p = document.querySelector('[data-dsh-usage-panel]'); if (p) p.scrollTop = 0; return true })()`)
+    }
+  }
+
   log('\n=== 5c. 浮动按钮可拖动（拖完不误开面板）===')
   {
     const b0 = await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); const r = f.getBoundingClientRect(); return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), t: f.style.transform || '', panel: !!document.querySelector('[data-dsh-usage-panel]') } })()`)
