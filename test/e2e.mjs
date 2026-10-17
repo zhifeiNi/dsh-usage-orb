@@ -383,6 +383,18 @@ try {
     log('  诊断: ' + JSON.stringify(diag))
   }
 
+  {
+    const hdr = await evalIn(`(() => {
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      if (!p) return null
+      const btns = Array.from(p.querySelectorAll('button')).slice(0, 6)
+      return btns.map((b) => ({ t: b.innerText.trim(), h: Math.round(b.getBoundingClientRect().height), w: Math.round(b.getBoundingClientRect().width) }))
+    })()`)
+    log('  表头按钮: ' + JSON.stringify(hdr))
+    const bad = Array.isArray(hdr) ? hdr.filter((b) => b.h > 30) : []
+    expect('表头按钮不折行（单行高度 ≤ 30px）', Array.isArray(hdr) && hdr.length > 0 && bad.length === 0, JSON.stringify(bad))
+  }
+
   log('\n=== 6. 新版 UI 内容校验 ===')
   const text = s.panelText || ''
   // 注意：区块标题带 text-transform: uppercase，DOM 文本会被渲染成大写
