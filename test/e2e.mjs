@@ -1087,8 +1087,10 @@ try {
       return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), l: Math.round(r.left), t: Math.round(r.top) }
     })()`)
     log('  按钮已被移到: ' + JSON.stringify(fab))
-    await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); if (f) f.click(); return !!f })()`)
+    /* 注意：open=1 时刷新会自动打开面板，这里必须先判断，否则 click 会把面板关掉 */
+    const wasOpen = await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); const o = !!document.querySelector('[data-dsh-usage-panel]'); if (f && !o) f.click(); return o })()`)
     await sleep(2400)
+    if (!wasOpen) { /* 由上面那次点击打开 */ }
     const box = await evalIn(`(() => {
       const p = document.querySelector('[data-dsh-usage-panel]')
       if (!p) return null
@@ -1125,5 +1127,6 @@ try {
   await sleep(2000)
   try { rmSync(CHROME_DATA, { recursive: true, force: true }) } catch { /* ignore */ }
   log(`  ✓ 已结束；插件源码完好: ${existsSync(join(HERE, '..', 'lib', 'client.js'))}`)
-  process.exit(exitCode)
+  /* 退出码按最终失败数决定：这样即使断言写在「清理」之前也不会被漏掉 */
+  process.exit(fails.length ? 1 : 0)
 }
