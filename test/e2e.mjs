@@ -38,6 +38,10 @@ const CLIJS = join(APP_ROOT, 'node_modules', '@deepseek-ai', 'dsh-desktop-host',
 const CHROME = join(process.env.LOCALAPPDATA, 'Google', 'Chrome', 'Application', 'chrome.exe')
 const PROFILE = 'usage-verify'
 const OUT_DIR = process.env.DSH_E2E_OUT || join(tmpdir(), 'dsh-usage-panel-e2e')
+import { readFileSync as __readPkg } from 'node:fs'
+const __PKG = JSON.parse(__readPkg(join(HERE, '..', 'package.json'), 'utf8'))
+const PKG_TITLE = 'dsh-usage-orb v' + __PKG.version
+
 const SHOT = join(OUT_DIR, 'verify-usage-panel-v0.2.0.png')
 /* 输出目录可能不存在（默认在临时目录下）：先建好再写截图 */
 mkdirSync(OUT_DIR, { recursive: true })
@@ -368,7 +372,7 @@ try {
   // （"每日 Token 用量" → "每日 TOKEN 用量"），所以比较必须忽略大小写。
   const hay = text.toLowerCase()
   const markers = [
-    '消耗统计', 'dsh-usage-orb v0.2.2', '数据更新于',
+    '消耗统计', PKG_TITLE, '数据更新于',
     'Token 总用量', '会话 / 请求', '最常用模型',
     '估算成本', '缓存省下的钱', '高峰时段占比',
     '活跃热力图', '每日 Token 用量', '每日成本',
