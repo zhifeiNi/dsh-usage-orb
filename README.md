@@ -4,7 +4,6 @@
 
 > 截图仅含聚合数字（不含会话标题、工作区名等个人信息）。
 
-[![ci](https://github.com/zhifeiNi/dsh-usage-orb/actions/workflows/ci.yml/badge.svg)](https://github.com/zhifeiNi/dsh-usage-orb/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 > 截图将在发布时用脱敏数据补充（现仓库不含含个人数据的截图）。
@@ -250,25 +249,42 @@ cmd /c rmdir "$profile\node_modules\dsh-usage-orb"   # 先断链接，避免误�
 
 ## 安装
 
-本插件**不是独立的 npm 库**，它运行在 DeepSeek Harness（DSH）桌面端内部，所以安装分三步：
+需要 DSH 桌面端（自带 `dsh plugin` 命令）。
 
 ```bash
-# ① 在 DSH 的 profile 里登记为本地依赖（以 desktop profile 为例）
-#    ~/.dsh/profiles/desktop/package.json
+# 从 GitHub 安装（推荐，无需发布到 npm）
+dsh plugin --profile desktop add github:zhifeiNi/dsh-usage-orb
+
+# 或从本地目录安装（改源码即生效，适合开发）
+dsh plugin --profile desktop add D:\path\to\dsh-usage-orb
+```
+
+装完**重启 DSH**，右下角出现圆形进度环即成功。卸载 / 升级：
+
+```bash
+dsh plugin --profile desktop remove dsh-usage-orb
+dsh plugin --profile desktop update dsh-usage-orb
+```
+
+> `--profile` 填你实际在用的 profile（桌面端一般是 `desktop`，Web 端常见 `web`）。
+> `dsh plugin add` 会自动把它写进 profile 的 `dependencies` 与 `dsh.profile.bundles`，**不需要手工建软链接**。
+
+<details>
+<summary>手工安装（旧版 DSH 没有 <code>dsh plugin</code> 命令时）</summary>
+
+```bash
+# ① profile 的 package.json 里加依赖（以 desktop 为例）
 #    "dependencies": { "dsh-usage-orb": "link:D:/path/to/dsh-usage-orb" }
-
-# ② 同一文件里把它加入 bundles，DSH 才会加载它
+# ② 同一文件把它加入 bundles
 #    "dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-usage-orb"] } }
-
-# ③ 建软链接（Windows 用 mklink /J，类 Unix 用 ln -s）
+# ③ 建软链接（Windows: mklink /J；类 Unix: ln -s）
 #    ~/.dsh/profiles/desktop/node_modules/dsh-usage-orb  ->  你的仓库目录
 ```
 
-> **两种装法的差异**：本地 link 安装时，`cordis.patch.yml` 里的 `name` 必须是可解析的
-> 绝对路径（仓库里保留的是开发者本机路径，请改成你自己的仓库路径）；用
-> `dsh plugin add` 从 npm/GitHub 安装时，把那一行改成包名 `dsh-usage-orb`。
+手工安装时，`cordis.patch.yml` 里的 `name` 需要改成你的**绝对路径**
+（仓库里保留的是包名 `dsh-usage-orb`，只有经 `dsh plugin add` 安装时才能被解析）。
 
-然后**完全退出并重启 DSH**。右下角出现浮动按钮即安装成功。
+</details>
 
 ## 隐私
 
