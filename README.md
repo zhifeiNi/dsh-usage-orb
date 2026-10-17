@@ -5,10 +5,10 @@
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-| 面板总览 | 指标卡磁贴 |
+| | |
 |---|---|
-| ![面板](docs/shot-1.png) | ![磁贴](docs/shot-2.png) |
-| ![界面](docs/shot-3.png) | ![外观](docs/shot-4.png) |
+| ![面板](docs/shot-1.png) | ![面板](docs/shot-2.png) |
+| ![面板](docs/shot-3.png) | ![面板](docs/shot-4.png) |
 
 ## 这是什么
 
