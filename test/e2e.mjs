@@ -39,7 +39,7 @@ const CHROME = join(process.env.LOCALAPPDATA, 'Google', 'Chrome', 'Application',
 const PROFILE = 'usage-verify'
 const OUT_DIR = process.env.DSH_E2E_OUT || join(tmpdir(), 'dsh-usage-panel-e2e')
 import { readFileSync as __readPkg } from 'node:fs'
-const __PKG = JSON.parse(__readPkg(join(HERE, '..', 'package.json'), 'utf8'))
+const __PKG = JSON.parse(__readPkg(new URL('../package.json', import.meta.url), 'utf8'))
 const PKG_TITLE = 'dsh-usage-orb v' + __PKG.version
 
 const SHOT = join(OUT_DIR, 'verify-usage-panel-v0.2.0.png')
@@ -365,6 +365,23 @@ try {
   s = await evalIn(VIS)
   expect('面板可见', s.panelVisible, s.panelSize ? `${s.panelSize.w}x${s.panelSize.h}` : '')
   expect('按钮仍可见', s.buttonVisible)
+
+  {
+    const diag = await evalIn(`(() => {
+      const d = document.documentElement.dataset
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      const cs = p ? getComputedStyle(p) : null
+      return {
+        tick: d.dshTick || null, tickErr: d.dshTickErr || null, drag: d.dshDrag || null,
+        dshErr: d.dshErr || null, errCount: d.dshErrN || null,
+        placed: d.dshPlaced || null, vis: d.dshPlacedVis || null, lt: d.dshPlacedLt || null,
+        panel: !!p, panelVis: cs ? cs.visibility : null, panelDisplay: cs ? cs.display : null,
+        panelRect: p ? (() => { const r = p.getBoundingClientRect(); return { l: Math.round(r.left), t: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) } })() : null,
+        fab: !!document.querySelector('.dsh-fab')
+      }
+    })()`)
+    log('  诊断: ' + JSON.stringify(diag))
+  }
 
   log('\n=== 6. 新版 UI 内容校验 ===')
   const text = s.panelText || ''
