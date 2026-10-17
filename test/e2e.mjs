@@ -1128,5 +1128,5 @@ try {
   try { rmSync(CHROME_DATA, { recursive: true, force: true }) } catch { /* ignore */ }
   log(`  ✓ 已结束；插件源码完好: ${existsSync(join(HERE, '..', 'lib', 'client.js'))}`)
   /* 退出码按最终失败数决定：这样即使断言写在「清理」之前也不会被漏掉 */
-  process.exit(fails.length ? 1 : 0)
+  process.exit(failures.length ? 1 : 0)
 }
