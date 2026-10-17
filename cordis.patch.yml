@@ -6,10 +6,9 @@
 # 本地试用（不修改任何现有 profile）：
 #   dsh --profile desktop --patch "<本仓库路径>/cordis.patch.yml"
 #
-# 说明：本地 link 安装时 name 必须是可解析的绝对路径；
-#       用 `dsh plugin add` 从 npm/GitHub 安装时，把它改成包名 'dsh-usage-orb'。
-#       注意：
+# 说明：name 用**包名**，由 profile 的 node_modules 解析；这样「设置 → 内置插件」
+#       才会把它列为可开关的插件条目（写绝对路径的条目不归属任何包）。
 #      这样任何人 clone 到任意目录都能用（早期版本写死了开发机的绝对路径）。
 - insert:
     - id: usage-panel
-      name: 'D:/Agent/dsh-usage-panel/lib/index.js'
+      name: 'dsh-usage-orb'
