@@ -368,7 +368,7 @@ try {
   // （"每日 Token 用量" → "每日 TOKEN 用量"），所以比较必须忽略大小写。
   const hay = text.toLowerCase()
   const markers = [
-    '消耗统计', 'dsh-usage-panel v0.2.0', '数据更新于',
+    '消耗统计', 'dsh-usage-orb v0.2.0', '数据更新于',
     'Token 总用量', '会话 / 请求', '最常用模型',
     '估算成本', '缓存省下的钱', '高峰时段占比',
     '活跃热力图', '每日 Token 用量', '每日成本',
