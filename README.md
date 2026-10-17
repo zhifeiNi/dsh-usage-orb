@@ -47,28 +47,30 @@ D:\path\to\dsh-usage-orb\
 
 ## 安装
 
-需要 DSH 桌面端（自带 `dsh plugin` 命令）。
+### 桌面端（DeepSeek Harness 应用）
+
+桌面端的 profile 由应用独占管理，**不能用 CLI 修改**（会报
+`profile "desktop" is managed exclusively by the Electron application`）。
+请在应用内操作：
+
+1. 打开左侧栏 **插件** 页面
+2. 用「从 GitHub / 本地路径安装」填入本仓库地址：
+   `https://github.com/zhifeiNi/dsh-usage-orb`
+3. 安装后**重启应用**，右下角出现圆形进度环即成功
+
+装好后可随时在该页面**开关 / 卸载**本插件。
+
+### CLI 或 Web 端（profile 由 CLI 管理时）
 
 ```bash
-# 从 GitHub 安装（推荐，无需发布到 npm）
-dsh plugin --profile desktop add github:zhifeiNi/dsh-usage-orb
-
-# 或从本地目录安装（改源码即生效，适合开发）
-dsh plugin --profile desktop add D:\path\to\dsh-usage-orb
+dsh plugin --profile web add github:zhifeiNi/dsh-usage-orb
+dsh plugin --profile web remove dsh-usage-orb
 ```
 
-装完**重启 DSH**，右下角出现圆形进度环即成功。卸载 / 升级：
-
-```bash
-dsh plugin --profile desktop remove dsh-usage-orb
-dsh plugin --profile desktop update dsh-usage-orb
-```
-
-> `--profile` 填你实际在用的 profile（桌面端一般是 `desktop`，Web 端常见 `web`）。
-> `dsh plugin add` 会自动把它写进 profile 的 `dependencies` 与 `dsh.profile.bundles`，**不需要手工建软链接**。
+> `--profile` 换成你实际在用的、且由 CLI 管理的 profile 名。桌面端请用上面的应用内安装。
 
 <details>
-<summary>手工安装（旧版 DSH 没有 <code>dsh plugin</code> 命令时）</summary>
+<summary>手工安装（旧版 DSH 既不支持应用内安装、也没有 <code>dsh plugin</code> 时）</summary>
 
 ```bash
 # ① profile 的 package.json 里加依赖（以 desktop 为例）
@@ -80,12 +82,9 @@ dsh plugin --profile desktop update dsh-usage-orb
 ```
 
 手工安装时，`cordis.patch.yml` 里的 `name` 需要改成你的**绝对路径**
-（仓库里保留的是包名 `dsh-usage-orb`，只有经 `dsh plugin add` 安装时才能被解析）。
+（仓库里保留的是包名 `dsh-usage-orb`，只有经包管理器安装时才能被解析）。
 
 </details>
-
-
----
 
 ## 预期现象
 
