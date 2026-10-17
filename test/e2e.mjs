@@ -464,6 +464,28 @@ try {
       grid.tiles.every((t) => t.h <= t.rows * unit + (t.rows - 1) * gap + 1.5 + 0.5))
   }
 
+  log('\n=== 5k. 窗口变小后按钮不能被推出视口 ===')
+  {
+    await evalIn(`(() => { try { localStorage.setItem('dsh-usage-panel:fabpos', JSON.stringify({ x: -1200, y: -600 })); return true } catch { return false } })()`)
+    await cdp.send('Page.reload')
+    await sleep(6000)
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 700, height: 520, deviceScaleFactor: 1, mobile: false })
+    await sleep(1200)
+    const small = await evalIn(`(() => {
+      const f = document.querySelector('.dsh-fab')
+      if (!f) return null
+      const r = f.getBoundingClientRect()
+      return { l: Math.round(r.left), t: Math.round(r.top), r: Math.round(r.right), b: Math.round(r.bottom), vw: innerWidth, vh: innerHeight }
+    })()`)
+    log('  缩小窗口后: ' + JSON.stringify(small))
+    expect('窗口变小后按钮仍在视口内（四边都在里面）',
+      !!(small && small.l >= -1 && small.t >= -1 && small.r <= small.vw + 1 && small.b <= small.vh + 1), JSON.stringify(small))
+    await cdp.send('Emulation.clearDeviceMetricsOverride')
+    await sleep(800)
+    await evalIn(`(() => { try { localStorage.removeItem('dsh-usage-panel:fabpos') } catch { /* ignore */ } const f = document.querySelector('.dsh-fab'); if (f) f.style.transform = ''; return true })()`)
+    await sleep(600)
+  }
+
   log('\n=== 5j. 气泡跟随按钮 / 面板不再先闪到右边 ===')
   {
     /* 把按钮挪到左侧，再看气泡是否跟着 */
