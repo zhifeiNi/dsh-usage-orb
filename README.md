@@ -194,6 +194,8 @@ dsh plugin --profile desktop update dsh-usage-orb
 
 ## 开发与测试
 
+> 踩坑记录（框架激活契约、插件为何必须可被解析为包、速度/限窗口径）见 [docs/DEVNOTES.md](docs/DEVNOTES.md)。
+
 ```bash
 npm test          # 三个离线套件（~1 秒，不依赖网络与真实数据，CI 跑这个）
 npm run test:e2e  # 端到端：启动真实 DSH + headless Chrome

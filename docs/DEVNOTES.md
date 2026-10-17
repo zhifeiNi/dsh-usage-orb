@@ -1,19 +1,6 @@
-# 开发记录（非用户文档）
+# 开发笔记
 
-这些是开发期间踩到的真实问题与实验结论，保留给未来的维护者；对使用者没有阅读价值，所以不在 README 里。
-
-## 当前状态：✅ 已在真实 DSH + 真实浏览器中端到端跑通（含截图）
-
-| 环节 | 状态 | 证据 |
-|---|---|---|
-| 数据源解析 | ✅ 真实数据 | 13 个文件扫描、采用 9 个；四类 token 完整；按模型之和 = 总量 |
-| 指标口径 | ✅ 与 DSH 同源 | 解码速度 228.6 tok/s（`decodeTokens/decodeMs`，与官方 `StatsPills` 同算法）、缓存命中率 99.62% |
-| host 侧加载 | ✅ 真实 DSH 日志 | `[dsh-usage-orb] host 侧已加载` + 自检行 |
-| host 路由 | ✅ 真实 HTTP 200 | `GET /usage-panel/api/usage` 返回合法 JSON；`POST {"days":2}` 正确裁剪 |
-| **client 激活** | ✅ 真实控制台 | `[dsh-usage-orb] client 侧已加载` / `已挂载浮动入口`，无异常 |
-| **界面渲染** | ✅ **真实浏览器截图** | headless Chrome 打开真实 DSH，点击后 656 字符面板文本 + `rects=9, polylines=1, circles=3, texts=6`； |
-| 卸载路径 | ✅ | `ctx.effect` cleanup 干净撤回 |
-| 本地 desktop profile | ✅ **零改动** | 全程未写入 |
+写给**维护者 / 想写 DSH 插件的人**：几条踩过的坑与数据口径。普通用户不需要读这个。
 
 ### 两个只在真实运行时才暴露的 bug（离线预检全部漏掉）
 
