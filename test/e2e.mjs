@@ -368,7 +368,7 @@ try {
   // （"每日 Token 用量" → "每日 TOKEN 用量"），所以比较必须忽略大小写。
   const hay = text.toLowerCase()
   const markers = [
-    '消耗统计', 'dsh-usage-orb v0.2.1', '数据更新于',
+    '消耗统计', 'dsh-usage-orb v0.2.2', '数据更新于',
     'Token 总用量', '会话 / 请求', '最常用模型',
     '估算成本', '缓存省下的钱', '高峰时段占比',
     '活跃热力图', '每日 Token 用量', '每日成本',
@@ -1328,6 +1328,60 @@ try {
     await sleep(7000)
     await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); if (f && !document.querySelector('[data-dsh-usage-panel]')) f.click(); return true })()`)
     await sleep(1500)
+  }
+
+  log('\n=== 12. v0.2.2 新玩法（等级条 / 血条 / 热力图点按 / 分享）===')
+  {
+    await evalIn(`(() => {
+      try {
+        const raw = JSON.parse(localStorage.getItem('dsh-usage-panel:prefs') || '{}')
+        raw.fLevel = true; raw.fBalance = true; raw.fHeatmap = true
+        localStorage.setItem('dsh-usage-panel:prefs', JSON.stringify(raw))
+        return true
+      } catch { return false }
+    })()`)
+    await cdp.send('Page.reload')
+    await sleep(6500)
+    await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); const o = !!document.querySelector('[data-dsh-usage-panel]'); if (f && !o) f.click(); return o })()`)
+    await sleep(2200)
+
+    const has = await evalIn(`(() => {
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      const lv = p ? p.querySelector('[data-level-strip]') : null
+      const hp = p ? p.querySelector('[data-hp]') : null
+      const share = p ? p.querySelector('[data-share]') : null
+      return {
+        level: !!lv, levelText: lv ? lv.innerText.replace(/\s+/g, ' ').trim().slice(0, 60) : null,
+        hp: !!hp, hpPct: hp ? hp.getAttribute('data-hp') : null,
+        share: !!share
+      }
+    })()`)
+    log('  新玩法节点: ' + JSON.stringify(has))
+    expect('等级条存在且显示 Lv', !!(has && has.level && /Lv\.\d/.test(has.levelText || '')), JSON.stringify(has))
+    expect('分享按钮存在', !!(has && has.share), JSON.stringify(has))
+    if (has && has.hp) expect('余额血条显示了百分比', Number(has.hpPct) >= 0 && Number(has.hpPct) <= 100, String(has.hpPct))
+    else log('  · 余额不可用，跳过血条断言（逻辑随账户服务状态变化）')
+
+    /* 热力图点按 → 当日明细 */
+    const picked = await evalIn(`(() => {
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      if (!p) return null
+      const cell = p.querySelector('[data-day]')
+      if (!cell) return null
+      const day = cell.getAttribute('data-day')
+      cell.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      return { day }
+    })()`)
+    await sleep(900)
+    const detail = await evalIn(`(() => {
+      const d = document.querySelector('[data-day-detail]')
+      return d ? { day: d.getAttribute('data-day'), text: d.innerText.replace(/\s+/g, ' ').trim().slice(0, 80) } : null
+    })()`)
+    log('  点按结果: ' + JSON.stringify(picked) + ' → ' + JSON.stringify(detail))
+    if (picked) {
+      expect('点热力图格子后出现当日明细', !!(detail && detail.day === picked.day), JSON.stringify({ picked, detail }))
+      expect('当日明细含 Token/成本/请求', !!(detail && /Token/.test(detail.text) && /成本/.test(detail.text)), JSON.stringify(detail))
+    } else log('  · 没有可点的热力图格子（数据不足），跳过')
   }
 
   log('\n=== 清理 ===')
