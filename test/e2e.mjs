@@ -676,6 +676,34 @@ try {
     expect('③ 回到当前进度', backNearCur, `after=${after0?.off?.toFixed?.(1)} cur=${cur.toFixed(1)}`)
   }
 
+  log('\n=== 6c. 编辑态磁贴抖动（iOS 手感）===')
+  {
+    const had = await evalIn(`(() => {
+      const b = document.querySelector('[data-layout-edit]')
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      if (!b || !p) return null
+      if (p.getAttribute('data-edit') !== '1') b.click()
+      return { root: p.getAttribute('data-edit') }
+    })()`)
+    await sleep(700)
+    const st = await evalIn(`(() => {
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      const card = p ? p.querySelector('[data-card]') : null
+      const cs = card ? getComputedStyle(card) : null
+      return {
+        root: p ? p.getAttribute('data-edit') : null,
+        anim: cs ? cs.animationName : null,
+        dur: cs ? cs.animationDuration : null,
+        cards: p ? p.querySelectorAll('[data-card]').length : 0
+      }
+    })()`)
+    log('  抖动状态: ' + JSON.stringify(st))
+    expect('进入编辑态后根节点 data-edit=1', !!(st && st.root === '1'), JSON.stringify(st))
+    expect('磁贴在编辑态抖动（animationName 生效）', !!(st && st.anim === 'dsh-tile-shake' && st.cards > 0), JSON.stringify(st))
+    await evalIn(`(() => { const b = document.querySelector('[data-layout-edit]'); const p = document.querySelector('[data-dsh-usage-panel]'); if (b && p && p.getAttribute('data-edit') === '1') b.click(); return true })()`)
+    await sleep(500)
+  }
+
   log('\n=== 6b. 模拟器滑动条可拖动 + 按钮悬浮显示百分比 ===')
   const readMove = () => evalIn(`(() => {
     const p = document.querySelector('[data-dsh-usage-panel]');
