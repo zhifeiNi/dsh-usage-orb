@@ -301,6 +301,8 @@ npm test          # 三个离线套件（~1 秒，不依赖网络与真实数据
 npm run test:e2e  # 端到端：启动真实 DSH + headless Chrome
 ```
 
+> 测试钩子：`USAGE_PANEL_FAKE_BALANCE='{\"balance\":\"23.32\"}'\` 可让宿主注入一个假余额，仅在 e2e 里使用，正常运行时无影响。
+
 > ⚠️ `test:e2e` **会改动你的环境**：克隆 `~/.dsh/profiles/desktop` 到临时 profile、
 > 结束相关进程、写入 `~/.dsh/usage-panel/`，并需要本机已安装 DSH 桌面端
 > （可用 `DSH_EXE` / `DSH_APP_ROOT` / `DSH_E2E_OUT` 覆盖路径）。只在你自己的机器上跑。
