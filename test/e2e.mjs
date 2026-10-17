@@ -1016,6 +1016,25 @@ try {
   expect('有可拖拽的宽度手柄', handle === true, String(handle))
 
   log('\n=== 10. 截图 ===')
+  /* 发布用截图：只裁面板上半部（表头 + 指标卡 + 余额），不含实时动态/会话标题等个人信息 */
+  try {
+    const pbox = await evalIn(`(() => {
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      if (!p) return null
+      const r = p.getBoundingClientRect()
+      return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.min(620, Math.round(r.height)) }
+    })()`)
+    if (pbox) {
+      const shot = await cdp.send('Page.captureScreenshot', {
+        format: 'png',
+        clip: { x: pbox.x, y: pbox.y, width: pbox.w, height: pbox.h, scale: 2 }
+      })
+      mkdirSync(join(HERE, '..', 'docs'), { recursive: true })
+      writeFileSync(join(HERE, '..', 'docs', 'panel.png'), Buffer.from(shot.data, 'base64'))
+      log('  ✓ 已保存 docs/panel.png（' + pbox.w + '×' + pbox.h + '，2x）')
+    }
+  } catch (e) { log('  · 面板截图跳过：' + String(e).slice(0, 80)) }
+
   const shot = await cdp.send('Page.captureScreenshot', { format: 'png' })
   writeFileSync(SHOT, Buffer.from(shot.data, 'base64'))
   log(`  ✓ 已保存 ${SHOT}`)

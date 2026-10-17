@@ -1,5 +1,9 @@
 # dsh-usage-orb
 
+![用量光球面板](docs/panel.png)
+
+> 截图仅含聚合数字（不含会话标题、工作区名等个人信息）。
+
 [![ci](https://github.com/zhifeiNi/dsh-usage-orb/actions/workflows/ci.yml/badge.svg)](https://github.com/zhifeiNi/dsh-usage-orb/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
