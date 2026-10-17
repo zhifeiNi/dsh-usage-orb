@@ -464,6 +464,31 @@ try {
       grid.tiles.every((t) => t.h <= t.rows * unit + (t.rows - 1) * gap + 1.5 + 0.5))
   }
 
+  log('\n=== 5i. 拖动中不得频闪、面板不得跳边 ===')
+  {
+    const fab = await evalIn(`(() => { const f = document.querySelector('.dsh-fab'); const r = f.getBoundingClientRect(); return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) } })()`)
+    await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: fab.x, y: fab.y, button: 'left', clickCount: 1 })
+    for (let i = 1; i <= 6; i++) {
+      await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: fab.x, y: fab.y - i * 28, button: 'left' })
+      await sleep(70)
+    }
+    const snap = () => evalIn(`(() => {
+      const f = document.querySelector('.dsh-fab')
+      const p = document.querySelector('[data-dsh-usage-panel]')
+      return { t: f ? (f.style.transform || '') : null, top: p ? Math.round(p.getBoundingClientRect().top) : null }
+    })()`)
+    const a1 = await snap()
+    await sleep(1500)          /* 期间会跑 3 个 450ms 轮询周期 */
+    const a2 = await snap()
+    await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: fab.x, y: fab.y - 6 * 28, button: 'left', clickCount: 1 })
+    log('  拖动中: ' + JSON.stringify(a1) + ' → ' + JSON.stringify(a2))
+    expect('拖动中按钮位置不被轮询擦回（没有频闪）', !!a1.t && a1.t === a2.t, JSON.stringify({ a1: a1.t, a2: a2.t }))
+    expect('拖动中面板不跳边', a1.top === a2.top, JSON.stringify({ a1: a1.top, a2: a2.top }))
+    await sleep(800)
+    await evalIn(`(() => { try { localStorage.removeItem('dsh-usage-panel:fabpos') } catch { /* ignore */ } const f = document.querySelector('.dsh-fab'); if (f) f.style.transform = ''; return true })()`)
+    await sleep(600)
+  }
+
   log('\n=== 5g. 面板滚动不会被自己的重定位打断 ===')
   {
     const box = await evalIn(`(() => { const p = document.querySelector('[data-dsh-usage-panel]'); if (!p) return null; p.scrollTop = 0; const r = p.getBoundingClientRect(); return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), canScroll: p.scrollHeight > p.clientHeight + 40 } })()`)
