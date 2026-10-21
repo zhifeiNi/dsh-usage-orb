@@ -8,6 +8,7 @@
 跨会话统计 token / 缓存命中率 / 成本 / 余额，全部数据只从本地日志读取。
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 
 | | |
 |---|---|
