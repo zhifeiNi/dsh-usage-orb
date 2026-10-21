@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="lib/icon.svg" width="96" height="96" alt="dsh-usage-orb 图标">
+</p>
+
 # dsh-usage-orb
 
 **DSH 用量光球** —— 常驻右下角的圆形进度环 + 可拖动的用量面板。
